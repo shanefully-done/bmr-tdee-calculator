@@ -12,6 +12,7 @@ The current focus is to implement the core BMR calculation logic. This involves 
   - `tech.md`: Lists the technologies and tools used.
   - `context.md`: This file, tracking the project's state.
 - Implemented persistence of user inputs (age, height, weight, gender) to `localStorage` in `app/page.tsx`.
+- Updated `app/layout.tsx` to use `public/preview.png` for Open Graph and Twitter image generation.
 
 ## Next Steps
 

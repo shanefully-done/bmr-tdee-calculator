@@ -18,6 +18,13 @@ export const metadata: Metadata = {
 	title: "BMR & TDEE Calculator",
 	description:
 		"Calculate your Basal Metabolic Rate (BMR) and Total Daily Energy Expenditure (TDEE).",
+	openGraph: {
+		images: "/preview.png",
+	},
+	twitter: {
+		images: "/preview.png",
+		card: "summary_large_image",
+	},
 };
 
 export default function RootLayout({
