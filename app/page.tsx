@@ -1,103 +1,305 @@
-import Image from "next/image";
+"use client";
+
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useState } from "react";
+import { useEffect } from "react";
+
+const formSchema = z.object({
+	gender: z.enum(["male", "female"], {
+		message: "You need to select a gender.",
+	}),
+	age: z
+		.number()
+		.min(1, {
+			message: "Age must be at least 1.",
+		})
+		.max(120, {
+			message: "Age cannot exceed 120.",
+		}),
+	height: z
+		.number()
+		.min(50, {
+			message: "Height must be at least 50 cm.",
+		})
+		.max(250, {
+			message: "Height cannot exceed 250 cm.",
+		})
+		.optional(),
+	weight: z
+		.number()
+		.min(20, {
+			message: "Weight must be at least 20 kg.",
+		})
+		.max(300, {
+			message: "Weight cannot exceed 300 kg.",
+		})
+		.optional(),
+});
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+	const [bmr, setBmr] = useState<number | null>(null);
+	const [tdee, setTdee] = useState<number | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+	const form = useForm<z.infer<typeof formSchema>>({
+		resolver: zodResolver(formSchema),
+		defaultValues: {
+			gender: "male",
+			age: undefined,
+			height: undefined,
+			weight: undefined,
+		},
+	});
+
+	const calculateBmr = (
+		gender: "male" | "female",
+		age: number,
+		height: number,
+		weight: number
+	) => {
+		let calculatedBmr: number;
+		if (gender === "male") {
+			calculatedBmr = 10 * weight + 6.25 * height - 5 * age + 5;
+		} else {
+			calculatedBmr = 10 * weight + 6.25 * height - 5 * age - 161;
+		}
+		setBmr(calculatedBmr);
+		setTdee(null); // Reset TDEE when BMR is recalculated
+	};
+
+	// Watch for changes in form fields
+	const watchedAge = form.watch("age");
+	const watchedHeight = form.watch("height");
+	const watchedWeight = form.watch("weight");
+	const watchedGender = form.watch("gender");
+
+	// Trigger BMR calculation when relevant fields change and are valid
+	useEffect(() => {
+		const values = form.getValues();
+		if (
+			form.formState.isValid &&
+			values.age !== undefined &&
+			values.height !== undefined &&
+			values.weight !== undefined
+		) {
+			calculateBmr(values.gender, values.age, values.height, values.weight);
+		} else {
+			setBmr(null);
+			setTdee(null);
+		}
+	}, [
+		watchedAge,
+		watchedHeight,
+		watchedWeight,
+		watchedGender,
+		form.formState.isValid,
+		form,
+	]);
+
+	const handleActivityLevelChange = (activityFactor: string) => {
+		if (bmr === null) return;
+
+		let factor = 0;
+		switch (activityFactor) {
+			case "sedentary":
+				factor = 1.2;
+				break;
+			case "lightly_active":
+				factor = 1.375;
+				break;
+			case "moderately_active":
+				factor = 1.55;
+				break;
+			case "very_active":
+				factor = 1.725;
+				break;
+			case "extra_active":
+				factor = 1.9;
+				break;
+		}
+		setTdee(bmr * factor);
+	};
+
+	return (
+		<main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-8">
+			<Card className="w-full max-w-md">
+				<CardHeader>
+					<CardTitle>BMR & TDEE Calculator</CardTitle>
+					<CardDescription>
+						Calculate your Basal Metabolic Rate and Total Daily Energy Expenditure.
+					</CardDescription>
+				</CardHeader>
+				<CardContent>
+					<Form {...form}>
+						<form className="space-y-4">
+							<FormField
+								control={form.control}
+								name="gender"
+								render={({ field }) => (
+									<FormItem className="space-y-3">
+										<FormLabel>Gender</FormLabel>
+										<FormControl>
+											<RadioGroup
+												onValueChange={field.onChange}
+												defaultValue={field.value}
+												className="flex flex-col space-y-1"
+											>
+												<FormItem className="flex items-center space-x-3 space-y-0">
+													<FormControl>
+														<RadioGroupItem value="male" />
+													</FormControl>
+													<FormLabel className="font-normal">Male</FormLabel>
+												</FormItem>
+												<FormItem className="flex items-center space-x-3 space-y-0">
+													<FormControl>
+														<RadioGroupItem value="female" />
+													</FormControl>
+													<FormLabel className="font-normal">Female</FormLabel>
+												</FormItem>
+											</RadioGroup>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name="age"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Age (years)</FormLabel>
+										<FormControl>
+											<Input
+												type="number"
+												{...field}
+												onChange={(event) => field.onChange(parseFloat(event.target.value))}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name="height"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Height (cm)</FormLabel>
+										<FormControl>
+											<Input
+												type="number"
+												step="0.1"
+												{...field}
+												onChange={(event) => field.onChange(parseFloat(event.target.value))}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name="weight"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Weight (kg)</FormLabel>
+										<FormControl>
+											<Input
+												type="number"
+												step="0.1"
+												{...field}
+												onChange={(event) => field.onChange(parseFloat(event.target.value))}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</form>
+					</Form>
+				</CardContent>
+				<CardFooter>
+					{bmr !== null && (
+						<div className="w-full text-center">
+							<h3 className="text-lg font-semibold">
+								Your BMR: {bmr.toFixed(2)} calories/day
+							</h3>
+							<div className="mt-4">
+								<p className="mb-2">Select your activity level to calculate TDEE:</p>
+								<Select onValueChange={handleActivityLevelChange}>
+									<SelectTrigger className="w-full">
+										<SelectValue placeholder="Activity Level" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="sedentary">Sedentary (x1.2)</SelectItem>
+										<SelectItem value="lightly_active">
+											Lightly Active (x1.375)
+										</SelectItem>
+										<SelectItem value="moderately_active">
+											Moderately Active (x1.55)
+										</SelectItem>
+										<SelectItem value="very_active">Very Active (x1.725)</SelectItem>
+										<SelectItem value="extra_active">Extra Active (x1.9)</SelectItem>
+									</SelectContent>
+								</Select>
+								{tdee !== null && (
+									<h3 className="text-lg font-semibold mt-4">
+										Your TDEE: {tdee.toFixed(2)} calories/day
+									</h3>
+								)}
+							</div>
+						</div>
+					)}
+				</CardFooter>
+			</Card>
+			<footer className="flex justify-center py-6 w-full shrink-0 items-center px-4 md:px-6">
+				<div className="container flex flex-col items-center justify-center gap-4 px-4 md:flex-row md:gap-2 md:px-6">
+					<nav className="flex gap-4 sm:gap-6">
+						<a
+							className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 text-primary hover:underline"
+							href="https://github.com/shanefully-done/bmr-tdee-calculator"
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							GitHub
+						</a>
+						<a
+							className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 text-primary hover:underline"
+							href="https://www.ixtj.dev/"
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							Blog
+						</a>
+					</nav>
+				</div>
+			</footer>
+		</main>
+	);
 }
