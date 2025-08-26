@@ -50,8 +50,7 @@ const formSchema = z.object({
 		})
 		.max(250, {
 			message: "Height cannot exceed 250 cm.",
-		})
-		.optional(),
+		}),
 	weight: z
 		.number()
 		.min(20, {
@@ -59,8 +58,7 @@ const formSchema = z.object({
 		})
 		.max(300, {
 			message: "Weight cannot exceed 300 kg.",
-		})
-		.optional(),
+		}),
 });
 
 export default function Home() {
@@ -70,10 +68,22 @@ export default function Home() {
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			gender: "male",
-			age: undefined,
-			height: undefined,
-			weight: undefined,
+			gender:
+				typeof window !== "undefined"
+					? (localStorage.getItem("bmr_gender") as "male" | "female") || "male"
+					: "male",
+			age:
+				typeof window !== "undefined"
+					? parseFloat(localStorage.getItem("bmr_age") || "") || undefined
+					: undefined,
+			height:
+				typeof window !== "undefined"
+					? parseFloat(localStorage.getItem("bmr_height") || "") || undefined
+					: undefined,
+			weight:
+				typeof window !== "undefined"
+					? parseFloat(localStorage.getItem("bmr_weight") || "") || undefined
+					: undefined,
 		},
 	});
 
@@ -121,6 +131,19 @@ export default function Home() {
 		form.formState.isValid,
 		form,
 	]);
+
+	// Persist form values to localStorage
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			localStorage.setItem("bmr_gender", watchedGender);
+			if (watchedAge !== undefined)
+				localStorage.setItem("bmr_age", watchedAge.toString());
+			if (watchedHeight !== undefined)
+				localStorage.setItem("bmr_height", watchedHeight.toString());
+			if (watchedWeight !== undefined)
+				localStorage.setItem("bmr_weight", watchedWeight.toString());
+		}
+	}, [watchedGender, watchedAge, watchedHeight, watchedWeight]);
 
 	const handleActivityLevelChange = (activityFactor: string) => {
 		if (bmr === null) return;
